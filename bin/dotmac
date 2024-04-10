@@ -1,20 +1,14 @@
 #!/usr/bin/env bash
 
 REPO="dotmac"
-export REPO
-PROGNAME="$(basename "$0")"
-export PROGNAME
+INSTALL_DIR="$HOME/.$REPO"
+export INSTALL_DIR
 
-SCRIPT=$(dirname "$0")
-export SCRIPT
-DIR=$(dirname "$SCRIPT")
-export DIR
-
-test -f "$DIR/lib/utils.sh" && source "$DIR/lib/utils.sh"
-test -f "$DIR/lib/chrome.sh" && source "$DIR/lib/chrome.sh"
-test -f "$DIR/lib/defaults.sh" && source "$DIR/lib/defaults.sh"
-test -f "$DIR/lib/iterm.sh" && source "$DIR/lib/iterm.sh"
-test -f "$DIR/lib/shottr.sh" && source "$DIR/lib/shottr.sh"
+test -f "$INSTALL_DIR/lib/utils.sh" && source "$INSTALL_DIR/lib/utils.sh"
+test -f "$INSTALL_DIR/lib/chrome.sh" && source "$INSTALL_DIR/lib/chrome.sh"
+test -f "$INSTALL_DIR/lib/defaults.sh" && source "$INSTALL_DIR/lib/defaults.sh"
+test -f "$INSTALL_DIR/lib/iterm.sh" && source "$INSTALL_DIR/lib/iterm.sh"
+test -f "$INSTALL_DIR/lib/shottr.sh" && source "$INSTALL_DIR/lib/shottr.sh"
 
 function print_usage() {
 	printf "%s: usage: %s [-h|--help]" "$PROGNAME" "$PROGNAME"
@@ -82,7 +76,7 @@ main() {
 	setup_chrome
 	setup_iterm
 	setup_shottr
-	killall_apps "Chrome" "iTerm" "SystemUIServer"
+	kill_apps "Google Chrome" "iTerm" "Shottr" "SystemUIServer"
 
 	print_success "$REPO setup"
 }

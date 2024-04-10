@@ -1,7 +1,7 @@
 test -f "$DIR/utils.sh" && source "$DIR/utils.sh"
 
 setup_chrome() {
-	if check_for_app "Chrome"; then
+	if check_for_app "Google Chrome"; then
 		# Disable the all too sensitive backswipe on trackpads
 		defaults write com.google.Chrome AppleEnableSwipeNavigateWithScrolls -bool false
 		defaults write com.google.Chrome.canary AppleEnableSwipeNavigateWithScrolls -bool false
