@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+
+REPO="dotmac"
+export REPO
+PROGNAME="$(basename "$0")"
+export PROGNAME
+
+SCRIPT=$(dirname "$0")
+export SCRIPT
+DIR=$(dirname "$SCRIPT")
+export DIR
+
+test -f "$DIR/lib/utils.sh" && source "$DIR/lib/utils.sh"
+test -f "$DIR/lib/chrome.sh" && source "$DIR/lib/chrome.sh"
+test -f "$DIR/lib/defaults.sh" && source "$DIR/lib/defaults.sh"
+test -f "$DIR/lib/iterm.sh" && source "$DIR/lib/iterm.sh"
+test -f "$DIR/lib/shottr.sh" && source "$DIR/lib/shottr.sh"
+
+function print_usage() {
+	printf "%s: usage: %s [-h|--help]" "$PROGNAME" "$PROGNAME"
+}
+
+function print_help() {
+	cat <<-EOF
+		usage: $PROGNAME [subcommands] [options]
+
+		OPTIONS:
+		    -h --help              Show this help
+
+		RUN:
+		    $PROGNAME
+	EOF
+}
+
+function is_not_valid_option() {
+	local option=$1
+	printf "bash: %s: %s: invalid option\n" "$PROGNAME" "$option"
+}
+
+cmdline() {
+	local arg=
+	for arg; do
+		local delim=""
+		case "$arg" in
+		# translate --gnu-long-options to -g (short options)
+		--help) args="${args}-h " ;;
+		# pass through anything else
+		*)
+			[[ "${arg:0:1}" == "-" ]] || delim="\""
+			args="${args}${delim}${arg}${delim} "
+			;;
+		esac
+	done
+
+	# reset the positional parameters to the short options
+	eval set -- "$args"
+
+	while getopts ":h" OPTION; do
+		case $OPTION in
+		h)
+			print_help
+			exit 0
+			;;
+		\?)
+			is_not_valid_option "-$OPTARG" &>/dev/null
+			print_usage
+			exit 2
+			;;
+		esac
+	done
+}
+
+main() {
+	cmdline "$@"
+
+	# this should be an option
+	# softwareupdate -ia
+	# this should be an option
+	# setup_computer
+	setup_permissions
+	setup_defaults
+	setup_chrome
+	setup_iterm
+	setup_shottr
+	killall_apps "Chrome" "iTerm" "SystemUIServer"
+
+	print_success "$REPO setup"
+}
+
+main

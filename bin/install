@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+
+# constants
+readonly GITHUB_URL="github.com"
+readonly USERNAME="iamnewton"
+readonly REPO="dotmac"
+readonly INSTALL_DIR="$HOME/.$REPO"
+readonly LOG="/tmp/$REPO.log"
+
+# Command/Processing logging
+print_process() {
+	local message=$1
+
+	echo "$(date) PROCESSING: $message" >>"$LOG"
+	printf "%s┃%s %s...\\n" "$(tput setaf 6)" "$(tput sgr0)$(tput setaf 7)" "$message$(tput sgr0)"
+}
+
+# Warning logging
+print_warning() {
+	local message=$1
+
+	echo "$(date) WARNING: $message" >>"$LOG"
+	printf "%s⚠ Warning:%s!\\n" "$(tput setaf 3)" "$(tput sgr0) $message"
+}
+
+# Success logging
+print_success() {
+	local message=$1
+
+	echo "$(date) SUCCESS: $message" >>"$LOG"
+	printf "%s✓ Success:%s\\n" "$(tput setaf 2)" "$(tput sgr0) $message"
+}
+
+# If missing, download and extract the dotmac repository
+if ! [[ -d "$INSTALL_DIR" ]]; then
+	print_warning "No $INSTALL_DIR found"
+
+	print_process "Creating directory at $INSTALL_DIR and setting permissions"
+	mkdir -p "$INSTALL_DIR"
+
+	print_process "Downloading repository to /tmp directory"
+	# (-#) shows the progress bar as # sign
+	# (-f) fail silently
+	# (-L) follow the headers
+	# (-o) output to a file
+	curl -#fLo /tmp/dotmac.tar.gz "https://$GITHUB_URL/$USERNAME/$REPO/tarball/main"
+
+	print_process "Extracting files to $INSTALL_DIR"
+	tar -zxf "/tmp/$REPO.tar.gz" --strip-components 1 -C "$INSTALL_DIR"
+
+	print_process "Removing tarball from /tmp directory"
+	rm -rf "/tmp/$REPO.tar.gz"
+
+	[[ $? ]] && print_success "$INSTALL_DIR created, repository downloaded and extracted"
+fi
+
+if ! [[ -d "$INSTALL_DIR/.git" ]]; then
+	# Change to the dotmac directory
+	cd "$INSTALL_DIR" || exit
+
+	# Initialize the git repository if it's missing
+	print_process "Initializing git repository"
+	git init
+
+	print_process "Setting main as the default branch"
+	git branch -m main
+
+	print_process "Adding https://$GITHUB_URL/$USERNAME/$REPO.git as origin"
+	git remote add origin "https://$GITHUB_URL/$USERNAME/$REPO.git"
+
+	print_process "Downloading changes from origin"
+	git fetch origin main
+
+	# Reset the index and working tree to the fetched HEAD
+	# (submodules are cloned in the subsequent sync step)
+	print_process "Resetting index & working tree to fetched HEAD"
+	git reset --hard FETCH_HEAD
+
+	# Remove any untracked files
+	print_process "Removing any untracked files"
+	git clean -fd
+
+	[[ $? ]] && print_success "Repository has been initialized"
+
+	# Pull down the latest changes
+	print_process "Pulling down latest changes"
+	git pull --rebase origin main
+
+	[[ $? ]] && print_success "Repository has been updated"
+fi
+
+print_process "Symlinking dotmac binary"
+ln -sfn "$INSTALL_DIR/bin/dotmac" "/usr/local/bin/dotmac"
+
+[[ $? ]] && print_success "dotmac installed."
