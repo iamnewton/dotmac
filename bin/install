@@ -89,6 +89,12 @@ if ! [[ -d "$INSTALL_DIR/.git" ]]; then
 	[[ $? ]] && print_success "Repository has been updated"
 fi
 
+# Setup Touch ID for sudo
+if test -f "/etc/pam.d/sudo_local.template"; then
+	sudo cp /etc/pam.d/sudo_local.template /etc/pam.d/sudo_local
+	sudo vim /etc/pam.d/sudo_local
+fi
+
 print_process "Symlinking dotmac binary"
 ln -sfn "$INSTALL_DIR/bin/dotmac" "/usr/local/bin/dotmac"
 
