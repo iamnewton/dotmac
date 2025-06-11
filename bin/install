@@ -2,42 +2,41 @@
 set -euo pipefail
 
 # fallback in case LOG_LIB isn't already set
-LOG_LIB="${LOG_LIB:-/usr/local/bin/log}"
+DOTLOG="${DOTLOG:-$HOME/.dotfiles/bin/dotlog}"
 
-if [[ -f "$LOG_LIB" ]]; then
-	source "$LOG_LIB"
+if [[ -f "$DOTLOG" ]]; then
+	source "$DOTLOG"
 else
-	echo "⚠️  LOG_LIB not found at $LOG_LIB. Continuing without logging functions."
+	echo "⚠️  DOTLOG not found at $DOTLOG. Continuing without logging functions."
 fi
 
 # constants
 readonly GITHUB_URL="github.com"
 readonly USERNAME="iamnewton"
 readonly REPO="dotmac"
-readonly INSTALL_DIR="$HOME/.$REPO"
-readonly LOG="/tmp/$REPO.log"
+readonly INSTALL_DIR="$HOME/.$REPO
 
 # If missing, download and extract the dotmac repository
 if ! [[ -d "$INSTALL_DIR" ]]; then
-	print_warning "No $INSTALL_DIR found"
+	dotlog::warning "No $INSTALL_DIR found"
 
-	print_process "Creating directory at $INSTALL_DIR and setting permissions"
+	dotlog::process "Creating directory at $INSTALL_DIR and setting permissions"
 	mkdir -p "$INSTALL_DIR"
 
-	print_process "Downloading repository to /tmp directory"
+	dotlog::process "Downloading repository to /tmp directory"
 	# (-#) shows the progress bar as # sign
 	# (-f) fail silently
 	# (-L) follow the headers
 	# (-o) output to a file
 	curl -#fLo /tmp/dotmac.tar.gz "https://$GITHUB_URL/$USERNAME/$REPO/tarball/main"
 
-	print_process "Extracting files to $INSTALL_DIR"
+	dotlog::process "Extracting files to $INSTALL_DIR"
 	tar -zxf "/tmp/$REPO.tar.gz" --strip-components 1 -C "$INSTALL_DIR"
 
-	print_process "Removing tarball from /tmp directory"
+	dotlog::process "Removing tarball from /tmp directory"
 	rm -rf "/tmp/$REPO.tar.gz"
 
-	[[ $? ]] && print_success "$INSTALL_DIR created, repository downloaded and extracted"
+	[[ $? ]] && dotlog::success "$INSTALL_DIR created, repository downloaded and extracted"
 fi
 
 if ! [[ -d "$INSTALL_DIR/.git" ]]; then
@@ -45,34 +44,34 @@ if ! [[ -d "$INSTALL_DIR/.git" ]]; then
 	cd "$INSTALL_DIR" || exit
 
 	# Initialize the git repository if it's missing
-	print_process "Initializing git repository"
+	dotlog::process "Initializing git repository"
 	git init
 
-	print_process "Setting main as the default branch"
+	dotlog::process "Setting main as the default branch"
 	git branch -m main
 
-	print_process "Adding https://$GITHUB_URL/$USERNAME/$REPO.git as origin"
+	dotlog::process "Adding https://$GITHUB_URL/$USERNAME/$REPO.git as origin"
 	git remote add origin "https://$GITHUB_URL/$USERNAME/$REPO.git"
 
-	print_process "Downloading changes from origin"
+	dotlog::process "Downloading changes from origin"
 	git fetch origin main
 
 	# Reset the index and working tree to the fetched HEAD
 	# (submodules are cloned in the subsequent sync step)
-	print_process "Resetting index & working tree to fetched HEAD"
+	dotlog::process "Resetting index & working tree to fetched HEAD"
 	git reset --hard FETCH_HEAD
 
 	# Remove any untracked files
-	print_process "Removing any untracked files"
+	dotlog::process "Removing any untracked files"
 	git clean -fd
 
-	[[ $? ]] && print_success "Repository has been initialized"
+	[[ $? ]] && dotlog::success "Repository has been initialized"
 
 	# Pull down the latest changes
-	print_process "Pulling down latest changes"
+	dotlog::process "Pulling down latest changes"
 	git pull --rebase origin main
 
-	[[ $? ]] && print_success "Repository has been updated"
+	[[ $? ]] && dotlog::success "Repository has been updated"
 fi
 
 # Setup Touch ID for sudo
@@ -81,9 +80,9 @@ if test -f "/etc/pam.d/sudo_local.template"; then
 	sudo vim /etc/pam.d/sudo_local
 fi
 
-if [[ ! -L /usr/local/bin/dotmac ]]; then
-	print_process "Symlinking dotmac binary"
-	sudo ln -sfn "$INSTALL_DIR/bin/dotmac" /usr/local/bin/dotmac
+if [[ ! -L $HOME/.local/bin/dotmac ]]; then
+	dotlog::process "Symlinking dotmac binary"
+	ln -sfn "$INSTALL_DIR/bin/dotmac" $HOME/.local/bin/dotmac
 fi
 
-[[ $? ]] && print_success "dotmac installed."
+[[ $? ]] && dotlog::success "dotmac installed."
