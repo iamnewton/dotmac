@@ -1,4 +1,14 @@
 #!/usr/bin/env bash
+set -euo pipefail
+
+# fallback in case LOG_LIB isn't already set
+LOG_LIB="${LOG_LIB:-/usr/local/bin/log}"
+
+if [[ -f "$LOG_LIB" ]]; then
+	source "$LOG_LIB"
+else
+	echo "⚠️  LOG_LIB not found at $LOG_LIB. Continuing without logging functions."
+fi
 
 # constants
 readonly GITHUB_URL="github.com"
@@ -6,30 +16,6 @@ readonly USERNAME="iamnewton"
 readonly REPO="dotmac"
 readonly INSTALL_DIR="$HOME/.$REPO"
 readonly LOG="/tmp/$REPO.log"
-
-# Command/Processing logging
-print_process() {
-	local message=$1
-
-	echo "$(date) PROCESSING: $message" >>"$LOG"
-	printf "%s┃%s %s...\\n" "$(tput setaf 6)" "$(tput sgr0)$(tput setaf 7)" "$message$(tput sgr0)"
-}
-
-# Warning logging
-print_warning() {
-	local message=$1
-
-	echo "$(date) WARNING: $message" >>"$LOG"
-	printf "%s⚠ Warning:%s!\\n" "$(tput setaf 3)" "$(tput sgr0) $message"
-}
-
-# Success logging
-print_success() {
-	local message=$1
-
-	echo "$(date) SUCCESS: $message" >>"$LOG"
-	printf "%s✓ Success:%s\\n" "$(tput setaf 2)" "$(tput sgr0) $message"
-}
 
 # If missing, download and extract the dotmac repository
 if ! [[ -d "$INSTALL_DIR" ]]; then
