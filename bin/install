@@ -81,7 +81,9 @@ if test -f "/etc/pam.d/sudo_local.template"; then
 	sudo vim /etc/pam.d/sudo_local
 fi
 
-print_process "Symlinking dotmac binary"
-ln -sfn "$INSTALL_DIR/bin/dotmac" "/usr/local/bin/dotmac"
+if [[ ! -L /usr/local/bin/dotmac ]]; then
+	print_process "Symlinking dotmac binary"
+	sudo ln -sfn "$INSTALL_DIR/bin/dotmac" /usr/local/bin/dotmac
+fi
 
 [[ $? ]] && print_success "dotmac installed."
